@@ -1,5 +1,7 @@
 package com.example.aleksei.carmotion.presenter
 
+import com.example.aleksei.carmotion.model.DistanceHelper
+import com.example.aleksei.carmotion.model.GeometryHelper
 import com.example.aleksei.carmotion.model.Point
 import com.example.aleksei.carmotion.view.CarView
 import kotlin.math.abs
@@ -16,6 +18,7 @@ class CarPresenterImpl(private val carView: CarView) : CarPresenter {
     private var prevDeltaY = 0f
     private var rotationRadius = 0f
     private var isAnimation = false
+    private val distanceHelper = DistanceHelper()
 
     init {
         carView.setPresenter(this)
@@ -34,8 +37,9 @@ class CarPresenterImpl(private val carView: CarView) : CarPresenter {
         prevDeltaY = initYPosition
     }
 
-    override fun startMoveCarToPoint(destinationPoint: Point) {
-        if (!isAnimation) {
+    override fun startMoveCarToPoint(carPoint: Point, carRotation: Float, destinationPoint: Point) {
+        val isTouchInRadius = distanceHelper.isDestinationPointInCarRadius(carPoint, rotationRadius, destinationPoint)
+        if (!isAnimation && !isTouchInRadius) {
             carView.rotateCarOnPointDirection(destinationPoint, currentAngle(), finishAngle())
             isAnimation = true
         }
@@ -94,8 +98,6 @@ class CarPresenterImpl(private val carView: CarView) : CarPresenter {
     }
 
     override fun handleRotationFinish(carPoint: Point, destinationPoint: Point) {
-        val rotation = getDestinationCourse(carPoint.x, carPoint.y, destinationPoint.x, destinationPoint.y)
-        carView.updateCarRotation(rotation)
         carView.moveStraightToPoint(destinationPoint)
     }
 
