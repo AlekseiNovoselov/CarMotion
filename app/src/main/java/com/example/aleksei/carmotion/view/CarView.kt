@@ -13,11 +13,13 @@ interface CarView : BaseView<CarPresenter> {
 
     fun showCar(point: Point)
 
-    fun rotateCarOnPointDirection(point: Point, startAngle: Float, finishAngle: Float)
+    fun rotateCarOnPointDirection(destinationPoint: Point, startAngle: Float, finishAngle: Float)
 
-    fun moveStraightToPoint(point: Point)
+    fun moveStraightToPoint(destinationPoint: Point)
 
-    fun updateCarPosition(deltaX: Float, deltaY: Float, deltaCourse: Float)
+    fun updateCarPosition(deltaX: Float, deltaY: Float)
+
+    fun updateCarRotation(rotation: Float)
 
     fun cancelRotation()
 }

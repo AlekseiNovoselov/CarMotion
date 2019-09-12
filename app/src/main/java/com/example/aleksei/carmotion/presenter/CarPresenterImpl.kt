@@ -7,68 +7,51 @@ import kotlin.math.atan
 import kotlin.math.cos
 import kotlin.math.sin
 
-class CarPresenterImpl(carView: CarView) : CarPresenter {
+private const val COURSE_EPSILON = 1.0f
 
+class CarPresenterImpl(private val carView: CarView) : CarPresenter {
     private var initXPosition = 0f
     private var initYPosition = 0f
-
     private var prevDeltaX = 0f
     private var prevDeltaY = 0f
-
+    private var rotationRadius = 0f
     private var isAnimation = false
 
-    private val mCarView: CarView = carView
-
     init {
-        mCarView.setPresenter(this)
+        carView.setPresenter(this)
     }
 
     override fun start() {
         initParams()
-        mCarView.showCar(Point(initXPosition, initYPosition))
+        carView.showCar(Point(initXPosition, initYPosition))
     }
 
     private fun initParams() {
-        initXPosition = mCarView.getScreenWidth() / 2
-        initYPosition = mCarView.getScreenHeight() / 2
-
-        ROTATION_RADIUS = mCarView.getScreenWidth() / 5
-
+        initXPosition = carView.getScreenWidth() / 2
+        initYPosition = carView.getScreenHeight() / 2
+        rotationRadius = carView.getScreenWidth() / 5
         prevDeltaX = initXPosition
         prevDeltaY = initYPosition
     }
 
-    override fun startMoveCarToPoint(point: Point) {
+    override fun startMoveCarToPoint(destinationPoint: Point) {
         if (!isAnimation) {
-            mCarView.rotateCarOnPointDirection(point, currentAngle(), finishAngle())
+            carView.rotateCarOnPointDirection(destinationPoint, currentAngle(), finishAngle())
             isAnimation = true
         }
     }
 
-    private fun currentAngle() = mCarView.getCarRotation() * Math.PI.toFloat() / 180
+    private fun currentAngle() = carView.getCarRotation() * Math.PI.toFloat() / 180
 
     private fun finishAngle() = currentAngle() + 2 * Math.PI.toFloat()
 
-
-    override fun onRotationCancel(point: Point) {
-        mCarView.moveStraightToPoint(point)
-    }
-
-    override fun onAnimationEnd(point: Point) {
-        initXPosition = point.x
-        initYPosition = point.y
-        prevDeltaX = point.x
-        prevDeltaY = point.y
-        isAnimation = false
-    }
-
     override fun onRotateAnimationUpdate(
-        curRotationAngle: Float,
+        startAngle: Float,
         destinationPoint: Point,
-        startAngle: Float
+        currentAngle: Float
     ) {
-        val deltaX = getDeltaX(curRotationAngle, startAngle)
-        val deltaY = getDeltaY(curRotationAngle, startAngle)
+        val deltaX = getDeltaX(currentAngle, startAngle)
+        val deltaY = getDeltaY(currentAngle, startAngle)
 
         val deltaCourse = getDeltaCourse(deltaX, deltaY)
         val destinationCourse = getDestinationCourse(
@@ -76,10 +59,13 @@ class CarPresenterImpl(carView: CarView) : CarPresenter {
             destinationPoint.y, deltaX, deltaY
         )
 
-        mCarView.updateCarPosition(deltaX, deltaY, deltaCourse)
+        carView.updateCarPosition(deltaX, deltaY)
+        if (!deltaCourse.isNaN()) {
+            carView.updateCarRotation(deltaCourse)
+        }
 
         if (isDirectionToDestination(deltaCourse, destinationCourse)) {
-            mCarView.cancelRotation()
+            carView.cancelRotation()
             return
         }
 
@@ -87,21 +73,12 @@ class CarPresenterImpl(carView: CarView) : CarPresenter {
         prevDeltaY = deltaY
     }
 
-    override fun onRotationAnimationEnd(point: Point) {
-        initXPosition = point.x
-        initYPosition = point.y
+    private fun getDeltaX(currentAngle: Float, startAngle: Float): Float {
+        return (cos(currentAngle.toDouble()) - cos(startAngle.toDouble())).toFloat() * rotationRadius + initXPosition
     }
 
-    private fun isDirectionToDestination(deltaCourse: Float, destinationCourse: Float): Boolean {
-        return abs(deltaCourse - destinationCourse) < COURSE_EPSILON
-    }
-
-    private fun getDeltaX(value: Float, startAngle: Float): Float {
-        return (cos(value.toDouble()) - cos(startAngle.toDouble())).toFloat() * ROTATION_RADIUS + initXPosition
-    }
-
-    private fun getDeltaY(value: Float, startAngle: Float): Float {
-        return (sin(value.toDouble()) - sin(startAngle.toDouble())).toFloat() * ROTATION_RADIUS + initYPosition
+    private fun getDeltaY(currentAngle: Float, startAngle: Float): Float {
+        return (sin(currentAngle.toDouble()) - sin(startAngle.toDouble())).toFloat() * rotationRadius + initYPosition
     }
 
     private fun getDeltaCourse(deltaX: Float, deltaY: Float): Float {
@@ -112,10 +89,21 @@ class CarPresenterImpl(carView: CarView) : CarPresenter {
         return Math.toDegrees(atan(((x - deltaX) / (deltaY - y)).toDouble())).toFloat()
     }
 
-    companion object {
+    private fun isDirectionToDestination(deltaCourse: Float, destinationCourse: Float): Boolean {
+        return abs(deltaCourse - destinationCourse) < COURSE_EPSILON
+    }
 
-        private var ROTATION_RADIUS: Float = 0f
+    override fun handleRotationFinish(carPoint: Point, destinationPoint: Point) {
+        val rotation = getDestinationCourse(carPoint.x, carPoint.y, destinationPoint.x, destinationPoint.y)
+        carView.updateCarRotation(rotation)
+        carView.moveStraightToPoint(destinationPoint)
+    }
 
-        private const val COURSE_EPSILON = 1.0f
+    override fun onAnimationEnd(destinationPoint: Point) {
+        initXPosition = destinationPoint.x
+        initYPosition = destinationPoint.y
+        prevDeltaX = destinationPoint.x
+        prevDeltaY = destinationPoint.y
+        isAnimation = false
     }
 }

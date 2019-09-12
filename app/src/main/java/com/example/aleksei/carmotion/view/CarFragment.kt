@@ -21,13 +21,16 @@ import androidx.fragment.app.Fragment
 import com.example.aleksei.carmotion.model.Point
 import com.example.aleksei.carmotion.presenter.CarPresenter
 
-class CarFragment : Fragment(), CarView, View.OnTouchListener {
+private const val CAR_HEIGHT = 100
+private const val CAR_WIDTH = 50
 
+private const val ROTATION_ANIMATION_DURATION = 5000L
+private const val STRAIGHT_MOVE_ANIMATION_DURATION = 1000L
+
+class CarFragment : Fragment(), CarView, View.OnTouchListener {
     private lateinit var rootView: FrameLayout
     private lateinit var mPresenter: CarPresenter
-
     private lateinit var carView: ImageView
-
     private lateinit var screenHelper: ScreenHelper
     private lateinit var rotationAnimator: ValueAnimator
 
@@ -80,26 +83,32 @@ class CarFragment : Fragment(), CarView, View.OnTouchListener {
         rootView.addView(carView)
     }
 
-    override fun rotateCarOnPointDirection(point: Point, startAngle: Float, finishAngle: Float) {
+    override fun rotateCarOnPointDirection(destinationPoint: Point, startAngle: Float, finishAngle: Float) {
         val simpleAnimatorListener = object : SimpleAnimatorListener() {
 
-            override fun onAnimationEnd(animation: Animator) {
-                mPresenter.onRotationAnimationEnd(Point(carView.x, carView.y))
-            }
-
             override fun onAnimationCancel(animation: Animator) {
-                mPresenter.onRotationCancel(point)
+                val carPoint = Point(carView.x, carView.y)
+                mPresenter.handleRotationFinish(carPoint, destinationPoint)
             }
         }
         rotationAnimator = ValueAnimator.ofFloat(startAngle, finishAngle).apply {
-            duration = ROTATION_SHOW_DURATION
+            duration = ROTATION_ANIMATION_DURATION
             addUpdateListener { animation ->
-                val value = animation.animatedValue as Float
-                mPresenter.onRotateAnimationUpdate(value, point, startAngle)
+                val currentAngle = animation.animatedValue as Float
+                mPresenter.onRotateAnimationUpdate(startAngle, destinationPoint, currentAngle)
             }
             addListener(simpleAnimatorListener)
         }
         rotationAnimator.start()
+    }
+
+    override fun updateCarPosition(deltaX: Float, deltaY: Float) {
+        carView.translationX = deltaX
+        carView.translationY = deltaY
+    }
+
+    override fun updateCarRotation(rotation: Float) {
+        carView.rotation = rotation
     }
 
     override fun cancelRotation() {
@@ -107,21 +116,16 @@ class CarFragment : Fragment(), CarView, View.OnTouchListener {
         rotationAnimator.cancel()
     }
 
-    override fun moveStraightToPoint(point: Point) {
-        AnimatorSet().apply {
-            playSequentially(createMoveAnimator(carView, point))
-            addListener(createMoveListener(carView))
-        }.start()
-    }
-
-    private fun createMoveAnimator(carView: ImageView, point: Point): Animator {
-        return AnimatorSet().apply {
-            duration = STRAIGHT_MOVE_SHOW_DURATION
+    override fun moveStraightToPoint(destinationPoint: Point) {
+        val animator = AnimatorSet().apply {
+            duration = STRAIGHT_MOVE_ANIMATION_DURATION
             playTogether(
-                ObjectAnimator.ofFloat(carView, View.TRANSLATION_X, point.x),
-                ObjectAnimator.ofFloat(carView, View.TRANSLATION_Y, point.y)
+                ObjectAnimator.ofFloat(carView, View.TRANSLATION_X, destinationPoint.x),
+                ObjectAnimator.ofFloat(carView, View.TRANSLATION_Y, destinationPoint.y)
             )
+            addListener(createMoveListener(carView))
         }
+        animator.start()
     }
 
     private fun createMoveListener(carView: ImageView): AnimatorListenerAdapter {
@@ -134,20 +138,7 @@ class CarFragment : Fragment(), CarView, View.OnTouchListener {
         }
     }
 
-    override fun updateCarPosition(deltaX: Float, deltaY: Float, deltaCourse: Float) {
-        if (!java.lang.Float.isNaN(deltaCourse)) {
-            carView.rotation = deltaCourse
-        }
-        carView.translationX = deltaX
-        carView.translationY = deltaY
-    }
-
     companion object {
-        private const val CAR_HEIGHT = 100
-        private const val CAR_WIDTH = 50
-
-        private const val STRAIGHT_MOVE_SHOW_DURATION: Long = 1000
-        private const val ROTATION_SHOW_DURATION: Long = 5000
 
         fun newInstance(): CarFragment {
             return CarFragment()

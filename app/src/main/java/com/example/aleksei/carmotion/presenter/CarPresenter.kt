@@ -4,13 +4,11 @@ import com.example.aleksei.carmotion.model.Point
 
 interface CarPresenter : BasePresenter {
 
-    fun startMoveCarToPoint(point: Point)
+    fun startMoveCarToPoint(destinationPoint: Point)
 
-    fun onRotationCancel(point: Point)
+    fun onRotateAnimationUpdate(startAngle: Float, destinationPoint: Point, currentAngle: Float)
 
-    fun onAnimationEnd(point: Point)
+    fun handleRotationFinish(carPoint: Point, destinationPoint: Point)
 
-    fun onRotateAnimationUpdate(curRotationAngle: Float, destinationPoint: Point, startAngle: Float)
-
-    fun onRotationAnimationEnd(point: Point)
+    fun onAnimationEnd(destinationPoint: Point)
 }
