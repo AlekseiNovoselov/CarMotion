@@ -39,7 +39,7 @@ class CarPresenterImpl(private val carView: CarView) : CarPresenter {
     override fun startMoveCarToPoint(carPoint: Point, destinationPoint: Point) {
         val isTouchInRadius = distanceHelper.isDestinationPointInCarRadius(carPoint, rotationRadius, destinationPoint)
         if (!isAnimation && !isTouchInRadius) {
-            carView.rotateCarOnPointDirection(carPoint, currentAngle(), finishAngle())
+            carView.rotateCarOnPointDirection(destinationPoint, currentAngle(), finishAngle())
             isAnimation = true
         }
     }
