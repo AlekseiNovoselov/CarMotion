@@ -7,9 +7,6 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -17,7 +14,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+
 import com.example.aleksei.carmotion.R;
+
+import androidx.fragment.app.Fragment;
 
 public class CarFragment extends Fragment implements CarContract.View, View.OnTouchListener {
 
@@ -36,7 +36,7 @@ public class CarFragment extends Fragment implements CarContract.View, View.OnTo
     private ValueAnimator rotationAnimator;
 
     @Override
-    public void setPresenter(@NonNull CarContract.Presenter presenter) {
+    public void setPresenter(CarContract.Presenter presenter) {
         mPresenter = presenter;
     }
 
@@ -51,12 +51,11 @@ public class CarFragment extends Fragment implements CarContract.View, View.OnTo
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         screenHelper = new ScreenHelper();
     }
 
-    @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -86,8 +85,6 @@ public class CarFragment extends Fragment implements CarContract.View, View.OnTo
     public boolean onTouch(View v, MotionEvent event) {
 
         switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                break;
             case MotionEvent.ACTION_UP:
                 v.performClick();
                 float x = event.getX();
@@ -118,7 +115,7 @@ public class CarFragment extends Fragment implements CarContract.View, View.OnTo
 
     @Override
     public void moveStraightToPoint(Point destinationPoint) {
-        if (carView != null ) {
+        if (carView != null) {
             AnimatorSet set = new AnimatorSet();
             set.playSequentially(showAnimatorSet(carView, destinationPoint));
             set.addListener(getMoveListener(carView));
@@ -158,7 +155,9 @@ public class CarFragment extends Fragment implements CarContract.View, View.OnTo
 
     @Override
     public void animateRotateDelta(float deltaX, float deltaY, float deltaCourse) {
-        carView.setRotation(deltaCourse);
+        if (!Float.isNaN(deltaCourse)) {
+            carView.setRotation(deltaCourse);
+        }
         carView.setTranslationX(deltaX);
         carView.setTranslationY(deltaY);
     }
@@ -168,7 +167,7 @@ public class CarFragment extends Fragment implements CarContract.View, View.OnTo
         final float startAngle = mPresenter.getStartAngle();
         final float finishAngle = mPresenter.getFinishAngle();
 
-        rotationAnimator = ValueAnimator.ofFloat(startAngle,  finishAngle);
+        rotationAnimator = ValueAnimator.ofFloat(startAngle, finishAngle);
         rotationAnimator.setDuration(ROTATION_SHOW_DURATION);
 
         rotationAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {

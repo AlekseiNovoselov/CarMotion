@@ -1,11 +1,11 @@
 package com.example.aleksei.carmotion;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.example.aleksei.carmotion.car.CarFragment;
 import com.example.aleksei.carmotion.car.CarPresenter;
-import com.example.aleksei.carmotion.utils.ActivityUtils;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -18,11 +18,11 @@ public class MainActivity extends AppCompatActivity {
                 (CarFragment) getSupportFragmentManager().findFragmentById(R.id.contentFrame);
         if (carFragment == null) {
             carFragment = CarFragment.newInstance();
-            ActivityUtils.addFragmentToActivity(
-                    getSupportFragmentManager(), carFragment, R.id.contentFrame);
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.contentFrame, carFragment)
+                    .commit();
         }
-
-        CarPresenter mCarPresenter = new CarPresenter(carFragment);
-
+        new CarPresenter(carFragment);
     }
 }

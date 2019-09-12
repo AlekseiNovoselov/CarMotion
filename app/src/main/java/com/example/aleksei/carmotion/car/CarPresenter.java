@@ -1,7 +1,5 @@
 package com.example.aleksei.carmotion.car;
 
-import android.support.annotation.NonNull;
-
 public class CarPresenter implements CarContract.Presenter {
 
     private static float ROTATION_RADIUS;
@@ -16,17 +14,16 @@ public class CarPresenter implements CarContract.Presenter {
 
     private boolean isAnimation = false;
 
-    @NonNull
     private final CarContract.View mCarView;
 
-    public CarPresenter(@NonNull CarFragment carView) {
+    public CarPresenter(CarFragment carView) {
         mCarView = carView;
         mCarView.setPresenter(this);
     }
 
     private void initParams() {
         initXPosition = mCarView.getScreenWidth() / 2;
-        initYPosition = mCarView.getScreenHeight() /2;
+        initYPosition = mCarView.getScreenHeight() / 2;
 
         ROTATION_RADIUS = mCarView.getScreenWidth() / 5;
 
@@ -81,12 +78,12 @@ public class CarPresenter implements CarContract.Presenter {
         float destinationCourse = getDestinationCourse(destinationPoint.getX(),
                 destinationPoint.getY(), deltaX, deltaY);
 
+        mCarView.animateRotateDelta(deltaX, deltaY, deltaCourse);
+
         if (isDirectionToDestination(deltaCourse, destinationCourse)) {
             mCarView.cancelRotate();
             return;
         }
-
-        mCarView.animateRotateDelta(deltaX, deltaY, deltaCourse);
 
         prevDeltaX = deltaX;
         prevDeltaY = deltaY;
@@ -115,7 +112,7 @@ public class CarPresenter implements CarContract.Presenter {
     }
 
     private float getDeltaCourse(float deltaX, float deltaY) {
-        return (float) Math.toDegrees(Math.atan( (prevDeltaX - deltaX) / (deltaY - prevDeltaY)));
+        return (float) Math.toDegrees(Math.atan((prevDeltaX - deltaX) / (deltaY - prevDeltaY)));
     }
 
     private float getDestinationCourse(float x, float y, float deltaX, float deltaY) {
