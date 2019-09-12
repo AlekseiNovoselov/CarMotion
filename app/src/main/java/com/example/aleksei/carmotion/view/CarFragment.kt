@@ -60,9 +60,9 @@ class CarFragment : Fragment(), CarView, View.OnTouchListener {
     override fun onTouch(view: View, event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_UP) {
             view.performClick()
-            val x = event.x
-            val y = event.y
-            mPresenter.startMoveCarToPoint(Point(x, y))
+            val carPoint = Point(carView.x, carView.y)
+            val destinationPoint = Point(event.x, event.y)
+            mPresenter.startMoveCarToPoint(carPoint, destinationPoint)
         }
         return true
     }
